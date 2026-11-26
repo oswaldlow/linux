@@ -1335,6 +1335,36 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
 				COMMAND_LINE_SIZE - strlen(boot_command_line) - 1);
 
 		/*
+		 * YUECHU-CGROUP: LK's burned-in command line carries Android's
+		 * "cgroup_disable=pressure cgroup.memory=nokmem".  On a regular
+		 * Linux userspace these break systemd-oomd / per-cgroup PSI and
+		 * kernel-memory accounting in container memory limits, so blank
+		 * them out before the __setup parsers run.
+		 */
+		{
+			static const char * const drop[] = {
+				"cgroup_disable=pressure",
+				"cgroup.memory=nokmem",
+			};
+			char *p;
+			size_t n;
+			int d;
+
+			for (d = 0; d < ARRAY_SIZE(drop); d++) {
+				n = strlen(drop[d]);
+				p = boot_command_line;
+				while ((p = strstr(p, drop[d])) != NULL) {
+					if ((p == boot_command_line || p[-1] == ' ') &&
+					    (p[n] == ' ' || p[n] == '\0')) {
+						memset(p, ' ', n);
+						pr_info("YUECHU-CGROUP: dropped %s\n", drop[d]);
+					}
+					p += n;
+				}
+			}
+		}
+
+		/*
 		 * YUECHU-RAMOOPS: let the ramoops module parameters on LK's command line take effect verbatim.
 		 *
 		 * LK carries on its command line:
