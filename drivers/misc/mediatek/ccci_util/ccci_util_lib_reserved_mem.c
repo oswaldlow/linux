@@ -78,16 +78,11 @@ int free_reserved_memory(phys_addr_t start_phys,
 	phys_addr_t pos;
 	unsigned long pages = 0;
 
-	/*
-	 * YUECHU-RESMEM: never hand a no-map reserved range (e.g. ccci_tag_mem,
-	 * reserved with no-map in the DT) back to the page allocator. Those pages
-	 * are not in the linear map, so the first page-cache user that receives
-	 * one oopses in dcache maintenance (seen as dma_direct_map_sg ->
-	 * dcache_clean_poc faults under ufshcd). Keeping 64K reserved is harmless.
-	 */
+	/* YUECHU-RESMEM: ccci_tag_mem is no-map (not in the linear map); freeing it
+	 * hands unmapped pages to buddy -> ufshcd dcache_clean_poc oops. Keep it. */
 	if (!memblock_is_map_memory(start_phys)) {
-		pr_notice("%s: skip no-map range 0x%pa-0x%pa (not in linear map)\n",
-			  __func__, &start_phys, &end_phys);
+		pr_notice("YUECHU-RESMEM: skip free no-map %pa-%pa\n",
+			  &start_phys, &end_phys);
 		return -EINVAL;
 	}
 
