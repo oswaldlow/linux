@@ -86,8 +86,7 @@ int free_reserved_memory(phys_addr_t start_phys,
 	 * dcache_clean_poc faults under ufshcd). Keeping 64K reserved is harmless.
 	 */
 	if (!memblock_is_map_memory(start_phys)) {
-		pr_notice("%s: skip no-map range 0x%pa-0x%pa (not in linear map)
-",
+		pr_notice("%s: skip no-map range 0x%pa-0x%pa (not in linear map)\n",
 			  __func__, &start_phys, &end_phys);
 		return -EINVAL;
 	}
