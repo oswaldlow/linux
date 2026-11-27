@@ -1987,11 +1987,16 @@ bias-disable;
  * and recovery without the key combo.
  *
  * LK reads the reboot reason from TOPRGU NONRST_REG2 (offset 0x24, low nibble).
- * The watchdog node is already a syscon, so syscon-reboot-mode only needs the
- * child node.  Values are verbatim from the stock yuechu DT:
+ * The watchdog node is already a syscon, but mtk-wdt does not populate its
+ * children, so "simple-mfd" is needed for the reboot-mode child to probe.
+ * Values are verbatim from the stock yuechu DT:
  * toprgu@1c007000 { reboot-mode { compatible = "syscon-reboot-mode"; ... } }.
  */
 &watchdog {
+	compatible = "mediatek,mt6895-wdt",
+		     "mediatek,mt6589-wdt",
+		     "syscon", "simple-mfd";
+
 	reboot-mode {
 		compatible = "syscon-reboot-mode";
 		offset = <0x24>;
