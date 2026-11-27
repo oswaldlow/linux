@@ -208,14 +208,19 @@ static int mt6375_set_current_limit(struct tcpci *tcpci, struct tcpci_data *data
 	 *
 	 * 5 V keeps the conservative 1.5 A ceiling of the direct-charge
 	 * fallback; above 5 V the buck may use the full negotiated current.
-	 * The default USB current stays at 100 mA before enumeration.
+	 *
+	 * Default Rp (a PC port, or a USB-A charger on an A-to-C cable) gets
+	 * the USB 2.0 SDP 500 mA: nothing raises AICR after enumeration and
+	 * BC1.2 is skipped under TCPM, so the former 100 mA stayed for the
+	 * whole session and the phone net-discharged (yuechu, PC port:
+	 * AICR 100 mA, bq28z610 current_now -573 mA while "Charging").
 	 */
 	if (!mv || max_ma < 100)
 		value.intval = 0;
 	else if (mv > 5000)
 		value.intval = min(max_ma, (u32)MT6375_MAX_AICR_MA) * 1000;
 	else if (max_ma <= 500)
-		value.intval = 100000;
+		value.intval = 500000;
 	else
 		value.intval = min(max_ma, 1500U) * 1000;
 	return power_supply_set_property(priv->charger,
